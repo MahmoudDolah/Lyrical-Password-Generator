@@ -106,8 +106,24 @@ func GeneratePassword(lyrics string) string {
 }
 
 func main() {
-	artist := GetFavoriteArtist()
-	song := GetFavoriteSong()
+	var artist, song string
+
+	clientID := os.Getenv("SPOTIFY_CLIENT_ID")
+	if clientID != "" {
+		token, err := ensureValidToken(clientID)
+		if err != nil {
+			log.Fatalf("Spotify authentication failed: %v", err)
+		}
+		var trackErr error
+		artist, song, trackErr = getTopTrack(token.AccessToken)
+		if trackErr != nil {
+			log.Fatalf("Could not fetch top tracks: %v", trackErr)
+		}
+		fmt.Printf("Using track: %q by %q\n", song, artist)
+	} else {
+		artist = GetFavoriteArtist()
+		song = GetFavoriteSong()
+	}
 
 	lyrics, err := GetLyrics(artist, song)
 	if err != nil {
